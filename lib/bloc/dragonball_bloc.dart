@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:dragon_ball_flutter/data/model.dart';
+import 'package:hive/hive.dart';
 import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 part 'dragonball_event.dart';
 part 'dragonball_state.dart';
@@ -13,30 +13,40 @@ class DragonballBloc extends Bloc<DragonballEvent, DragonballState> {
   DragonballBloc() : super(DragonballInitial()) {
     on<GetDataByDragonball>((event, emit) async {
       emit(Loading());
-      final dio = Dio();
-      final response = await dio.get('https://dragonball-api.com/api/characters');
+      try {
+        final dio = Dio();
+        final response = await dio.get('https://dragonball-api.com/api/characters');
 
-      final list = response.data['items'] as List;
-      final listDragonball = list.map((e) => Model.fromJson(e)).toList();
-      String json = jsonEncode(listDragonball.map((e) => e.toJson()).toList());
-      await saveJson(json);
+        final list = response.data['items'] as List;
+        final listDragonball = list.map((e) => Model.fromJson(e)).toList();
+        
+        // Convert to JSON string and save to Hive
+        final jsonString = jsonEncode(listDragonball.map((e) => e.toJson()).toList());
+        final box = Hive.box('dragonball');
+        await box.put('characters', jsonString);
 
-      emit(Success(listDragonball));
+        emit(Success(listDragonball));
+      } catch (e) {
+        emit(Error());
+      }
     });
 
     on<GetDataFromLocal>((event, emit) async {
-      final prefs = await SharedPreferences.getInstance();
-      final json = prefs.get('db') as String;
-      List<dynamic> list = jsonDecode(json);
-
-      final listDb = list.map((e) => Model.fromJson(e)).toList();
-      emit(Success(listDb));
+      try {
+        final box = Hive.box('dragonball');
+        final jsonString = box.get('characters') as String?;
+        
+        if (jsonString == null) {
+          emit(Error());
+          return;
+        }
+        
+        final List<dynamic> jsonList = jsonDecode(jsonString);
+        final listDragonball = jsonList.map((e) => Model.fromJson(e)).toList();
+        emit(Success(listDragonball));
+      } catch (e) {
+        emit(Error());
+      }
     });
-  }
-  Future <void> saveJson(String json) async{
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('db', json);
-
-    print('\n\nData from pref:\n ${prefs.get('db')}\n\n');
   }
 }
