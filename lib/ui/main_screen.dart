@@ -9,35 +9,62 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = DragonballBloc()..add(GetDataByDragonball());
+    final bloc = DragonballBloc()..add(GetDataFromLocal());
     return SafeArea(
-        child: Scaffold(
-          body: BlocBuilder<DragonballBloc, DragonballState>(
-            bloc: bloc,
+      child: Scaffold(
+        body: BlocBuilder<DragonballBloc, DragonballState>(
+          bloc: bloc,
           builder: (context, state) {
-            if (state is Success){
+            if (state is Success) {
               final list = state.list;
-              return Expanded(child: ListView.builder(itemBuilder: (context, index){
-                return Column(children: [
-                  Image.network(list[index].image, height: 400, width: 400,),
-                  Text(list[index].name, style: TextStyle(fontSize: 30),),
-                  Text('ki: ${list[index].ki} / ${list[index].maxKi}', style: TextStyle(color: Colors.red),),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(list[index].description, maxLines: 10, textAlign: TextAlign.center,),
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Image.network(
+                              list[index].image,
+                              height: 400,
+                              width: 400,
+                            ),
+                            Text(
+                              list[index].name,
+                              style: TextStyle(fontSize: 30),
+                            ),
+                            Text(
+                              'ki: ${list[index].ki} / ${list[index].maxKi}',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Text(
+                                list[index].description,
+                                maxLines: 10,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Text(
+                              list[index].affiliation,
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            SizedBox(height: 50),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                  Text(list[index].affiliation, style: TextStyle(color: Colors.red)),
-                  SizedBox(height: 50,),
-                ],);
-              },
-              itemCount: list.length,
-              ));
+                ],
+              );
             } else {
-              return const Center(child: CircularProgressIndicator(),);
+              return const Center(child: CircularProgressIndicator());
             }
           },
         ),
-      )
+      ),
     );
   }
 }
+

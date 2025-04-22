@@ -11,4 +11,8 @@ class Model{
   factory Model.fromJson(Map<String, dynamic> json){
     return Model(name: json['name'], image: json['image'], ki: json['ki'], maxKi: json['maxKi'], description: json['description'], affiliation: json['affiliation']);
   }
+
+  Map<String, dynamic> toJson(){
+    return {'name' : name, 'ki': ki, 'maxKi' : maxKi, 'image' : image, 'description' : description, 'affiliation' : affiliation};
+  }
 }
